@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СОСНОВСКАЯ НИВА - Конкурс "Лучший стихотворец"</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --tg-blue: #0088cc;
+            --bg-light: #f9f9f9;
+            --card-white: #ffffff;
+            --text-dark: #1a1a1a;
+            --text-gray: #666666;
+            --accent-green: #2ecc71;
+            --border-color: #e0e0e0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Анимация снега (светлая версия) */
+        #snow-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+        .snowflake {
+            position: absolute; background-color: #d1d9e0; border-radius: 50%;
+            opacity: 0.5; animation: fall linear infinite;
+        }
+        @keyframes fall { to { transform: translateY(100vh); } }
+
+        .container {
+            position: relative; z-index: 2;
+            max-width: 500px; margin: 0 auto; padding: 20px; width: 100%;
+        }
+
+        header {
+            text-align: center; padding: 30px 0;
+            border-bottom: 2px solid var(--border-color); margin-bottom: 30px;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif; font-size: 26px;
+            font-weight: 700; color: var(--text-dark); text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: var(--card-white); border-radius: 20px; padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        h2 { font-size: 20px; margin-bottom: 15px; text-align: center; }
+
+        /* Стили кандидатов */
+        .candidates { display: flex; flex-direction: column; gap: 12px; }
+        .candidate {
+            display: flex; align-items: center; padding: 15px;
+            border: 2px solid var(--border-color); border-radius: 12px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .candidate:hover { border-color: var(--tg-blue); background: #f0f8ff; }
+        .candidate.selected { border-color: var(--tg-blue); background: #f0f8ff; }
+
+        .radio-dot {
+            width: 20px; height: 20px; border: 2px solid var(--border-color);
+            border-radius: 50%; margin-right: 15px; position: relative;
+        }
+        .selected .radio-dot { border-color: var(--tg-blue); }
+        .selected .radio-dot::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 10px; height: 10px; background: var(--tg-blue); border-radius: 50%;
+        }
+
+        .name { font-weight: 700; }
+        .info { font-size: 12px; color: var(--text-gray); }
+
+        .btn {
+            width: 100%; padding: 16px; background: var(--tg-blue);
+            color: white; border: none; border-radius: 12px;
+            font-weight: 700; font-size: 16px; cursor: pointer;
+            margin-top: 20px; display: none; transition: 0.3s;
+        }
+        .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* Скрытые секции */
+        #voting-section, #results-section, #already-voted { display: none; }
+
+        .auth-box { text-align: center; padding: 40px 20px; }
+        .tg-widget-container { display: flex; justify-content: center; margin-top: 20px; }
+
+        footer { text-align: center; padding: 20px; color: var(--text-gray); font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div id="snow-container"></div>
+
+<div class="container">
+    <header>
+        <div class="logo">СОСНОВСКАЯ НИВА</div>
+        <div style="color: #e74c3c; font-weight: bold; margin-top: 5px;">КОНКУРС 16+</div>
+    </header>
+
+    <div id="auth-section" class="card auth-box">
+        <h2>Голосование</h2>
+        <p>Для участия необходимо подтвердить личность через Telegram</p>
+        <div class="tg-widget-container">
+            <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                data-telegram-login="Cho" 
+                data-size="large" 
+                data-onauth="onTelegramAuth(user)" 
+                data-request-access="write"></script>
+        </div>
+    </div>
+
+    <div id="voting-section" class="card">
+        <h2 id="welcome-msg">Выберите кандидата:</h2>
+        <div class="candidates">
+            <div class="candidate" onclick="selectCandidate(1)" data-id="1">
+                <div class="radio-dot"></div>
+                <div>
+                    <div class="name">Александр Белоусов</div>
+                    <div class="info">Кандидат №1</div>
+                </div>
+            </div>
+            <div class="candidate" onclick="selectCandidate(2)" data-id="2">
+                <div class="radio-dot"></div>
+                <div>
+                    <div class="name">Евгений Головин</div>
+                    <div class="info">Кандидат №2</div>
+                </div>
+            </div>
+            <div class="candidate" onclick="selectCandidate(3)" data-id="3">
+                <div class="radio-dot"></div>
+                <div>
+                    <div class="name">Валерия Барболина</div>
+                    <div class="info">Кандидат №3</div>
+                </div>
+            </div>
+        </div>
+        <button id="vote-btn" class="btn" onclick="sendVote()">ОТПРАВИТЬ ГОЛОС</button>
+    </div>
+
+    <div id="already-voted" class="card" style="text-align:center;">
+        <i class="fas fa-check-circle" style="color: var(--accent-green); font-size: 50px; margin-bottom: 15px;"></i>
+        <h2>Ваш голос принят!</h2>
+        <p>Вы уже участвовали в этом голосовании.</p>
+    </div>
+
+    <footer>
+        © 2026 АНО «Редакция газеты «Сосновская нива»
+    </footer>
+</div>
+
+<script>
+    // ТВОИ РЕАЛЬНЫЕ ДАННЫЕ
+    const BOT_TOKEN = '8190033537:AAEmk-nMHAlrjmp5389rCbRoP6q0IqHw-K0';
+    const ADMIN_CHAT_ID = '8491418744';
+
+    let selectedCandidateId = null;
+    let userData = JSON.parse(localStorage.getItem('user_tg_data'));
+
+    window.onload = () => {
+        createSnow();
+        if (userData) {
+            checkVoteStatus();
+        }
+    };
+
+    // 1. Авторизация
+    function onTelegramAuth(user) {
+        userData = user;
+        localStorage.setItem('user_tg_data', JSON.stringify(user));
+        
+        // Отправляем лог о входе админу
+        sendLog(`🚀 <b>Новый вход на сайт:</b>\n👤 Имя: ${user.first_name}\n🆔 ID: <code>${user.id}</code>\n🔗 Username: @${user.username || 'нет'}`);
+        
+        checkVoteStatus();
+    }
+
+    function checkVoteStatus() {
+        document.getElementById('auth-section').style.display = 'none';
+        if (localStorage.getItem('has_voted')) {
+            document.getElementById('already-voted').style.display = 'block';
+        } else {
+            document.getElementById('voting-section').style.display = 'block';
+            document.getElementById('welcome-msg').innerText = `${userData.first_name}, выберите лучшего:`;
+        }
+    }
+
+    // 2. Выбор
+    function selectCandidate(id) {
+        selectedCandidateId = id;
+        document.querySelectorAll('.candidate').forEach(el => {
+            el.classList.remove('selected');
+            if(el.dataset.id == id) el.classList.add('selected');
+        });
+        document.getElementById('vote-btn').style.display = 'block';
+    }
+
+    // 3. Отправка голоса (Реальная отправка в Telegram)
+    async function sendVote() {
+        if (!selectedCandidateId) return;
+
+        const candidateName = document.querySelector(`.candidate[data-id="${selectedCandidateId}"] .name`).innerText;
+        const btn = document.getElementById('vote-btn');
+        btn.disabled = true;
+        btn.innerText = "ОТПРАВКА...";
+
+        const message = `🗳 <b>НОВЫЙ ГОЛОС!</b>\n` +
+                        `--------------------------\n` +
+                        `👤 <b>Отправитель:</b> ${userData.first_name} ${userData.last_name || ''}\n` +
+                        `🆔 <b>TG ID:</b> <code>${userData.id}</code>\n` +
+                        `🔗 <b>Username:</b> @${userData.username || 'скрыт'}\n` +
+                        `⭐ <b>ВЫБОР:</b> <b>${candidateName}</b>\n` +
+                        `--------------------------`;
+
+        const success = await sendLog(message);
+
+        if (success) {
+            localStorage.setItem('has_voted', 'true');
+            document.getElementById('voting-section').style.display = 'none';
+            document.getElementById('already-voted').style.display = 'block';
+        } else {
+            alert("Ошибка при отправке голоса. Попробуйте еще раз.");
+            btn.disabled = false;
+            btn.innerText = "ОТПРАВИТЬ ГОЛОС";
+        }
+    }
+
+    // Универсальная функция логов
+    async function sendLog(text) {
+        try {
+            const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: ADMIN_CHAT_ID,
+                    text: text,
+                    parse_mode: 'HTML'
+                })
+            });
+            return response.ok;
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    function createSnow() {
+        const container = document.getElementById('snow-container');
+        for (let i = 0; i < 40; i++) {
+            const flake = document.createElement('div');
+            flake.className = 'snowflake';
+            flake.style.width = flake.style.height = (Math.random() * 4 + 2) + 'px';
+            flake.style.left = Math.random() * 100 + 'vw';
+            flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+            flake.style.opacity = Math.random();
+            container.appendChild(flake);
+        }
+    }
+</script>
+
+</body>
+</html>
